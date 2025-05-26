@@ -1,5 +1,4 @@
 -- Active: 1747604834830@@127.0.0.1@5432@conservation_db
--- assignment 2
 
 CREATE DATABASE conservation_db;
 
@@ -78,14 +77,16 @@ SELECT common_name FROM species
 
 
 -- prblm-6
-SELECT * FROM (
-    SELECT common_name, MAX(sighting_time) as sighting_time , name FROM sightings
-    JOIN rangers on sightings.ranger_id = rangers.ranger_id
-    JOIN species on sightings.species_id = species.species_id
+SELECT 
+    common_name, 
+    MAX(sighting_time) as sighting_time , 
+    rangers.name 
+FROM sightings
+    JOIN species ON sightings.species_id = species.species_id
+    JOIN rangers ON sightings.ranger_id = rangers.ranger_id
     GROUP BY common_name, name 
     LIMIT 2
-) as limited_data
-ORDER BY common_name DESC;
+
 
 -- Problem-7
 UPDATE species
