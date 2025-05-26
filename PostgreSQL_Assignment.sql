@@ -5,7 +5,6 @@ CREATE DATABASE conservation_db;
 
 -- table 1
 SELECT * FROM rangers;
--- DROP TABLE rangers;
 CREATE Table rangers(
     ranger_id SERIAL UNIQUE PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -20,7 +19,6 @@ INSERT INTO rangers VALUES
 
 -- table 2
 SELECT * FROM species ;
-DROP TABLE species ;
 CREATE Table species (
     species_id SERIAL UNIQUE PRIMARY KEY,
     common_name VARCHAR(50) NOT NULL,
@@ -38,7 +36,6 @@ INSERT INTO species (common_name, scientific_name, discovery_date, conservation_
 
 -- table 3
 SELECT * FROM sightings ;
-DROP TABLE sightings ;
 CREATE Table sightings (
     sighting_id  SERIAL UNIQUE PRIMARY KEY,
     species_id INTEGER REFERENCES species(species_id),
@@ -55,24 +52,42 @@ INSERT INTO sightings (species_id, ranger_id, location, sighting_time, notes) VA
 
 
 
-
-
 -- Problem-1
 INSERT INTO rangers (ranger_id,name,region) VALUES(4,'Derek Fox', 'Coastal Plains');
 
 
 -- Problem-2
+SELECT count(DISTINCT sightings.species_id) as unique_species_count FROM sightings
 
 
-
--- Problem-3 (sightings r location e "%%Pass%%" thakte hobe)
+-- Problem-3
 SELECT * FROM sightings 
     WHERE location LIKE '%Pass%';
 
 
+-- problem-4
+SELECT name, count(*) as total_sightings FROM sightings
+    JOIN rangers on sightings.ranger_id = rangers.ranger_id
+    GROUP BY rangers.name
+    ORDER BY rangers.name ASC;
+
+-- prblm-5
+SELECT common_name FROM species
+    LEFT JOIN sightings on species.species_id = sightings.species_id 
+    WHERE sightings.species_id IS NULL; 
 
 
--- Problem-7 ( update all species b4 1800 to status 'Historic')
+-- prblm-6
+SELECT * FROM (
+    SELECT common_name, MAX(sighting_time) as sighting_time , name FROM sightings
+    JOIN rangers on sightings.ranger_id = rangers.ranger_id
+    JOIN species on sightings.species_id = species.species_id
+    GROUP BY common_name, name 
+    LIMIT 2
+) as limited_data
+ORDER BY common_name DESC;
+
+-- Problem-7
 UPDATE species
     set conservation_status = 'Historic'
     WHERE EXTRACT(year FROM discovery_date) < 1800;
@@ -88,21 +103,9 @@ SELECT sighting_id,
 FROM sightings;
 
 
--- problem-4 (rangers id k group kore aksateh kore count ber koro from sighting table join kore nam dekhao)
-SELECT name, count(*) as total_sightings FROM sightings
-    JOIN rangers on sightings.ranger_id = rangers.ranger_id
-    GROUP BY rangers.name
-    ORDER BY rangers.name ASC;
 
-
-
--- prblm-5
-SELECT common_name FROM species
-    LEFT JOIN sightings on species.species_id = sightings.species_id 
-    WHERE sightings.species_id IS NULL;  
-
-
-
--- prblm-9 (delete rangers who have never sighted any)
--- DELETE FROM rangers;
-
+-- prblm-9 
+DELETE FROM rangers
+    WHERE ranger_id NOT IN (
+        SELECT DISTINCT ranger_id FROM sightings 
+    );
